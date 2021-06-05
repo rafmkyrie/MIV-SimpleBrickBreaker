@@ -3,10 +3,11 @@
 var canvas = document.getElementById('idcanvas')
 var ctx = canvas.getContext('2d');
 
-const DX = 1.5;
-const DY = 1.5;
+const DX = 1.5 * canvas.width / 1000;
+const DY = 1.5 * canvas.width / 1000;
 
 ctx.textAlign = "center"; 
+var fontsize = 0;
 var lives = 3;
 var gameOverBool = false;
 var showPlayAgain = false;
@@ -22,7 +23,7 @@ var raquette = {
     y: 0,
     w: 0,
     h: 0,
-    speed: 25,
+    speed: 30,
     imgs: [],
     frame: 0,
     getImage: function () {
@@ -38,7 +39,7 @@ raquette.imgs[0] = document.getElementById("raquette1");
 raquette.imgs[1] = document.getElementById("raquette2");
 raquette.imgs[2] = document.getElementById("raquette3");
 
-raquette.w = 200;
+raquette.w = 200 * canvas.width / 1000;
 raquette.h = raquette.w * raquette.imgs[0].height / raquette.imgs[0].width * 0.7;
 raquette.x = canvas.width/2 - raquette.w/2;
 raquette.y = Math.floor(canvas.height - 1.5*raquette.h);
@@ -58,7 +59,7 @@ function updateRaquetteImage(){
 
 var balle = {
     img: document.getElementById("balle"),
-    size: 24,
+    size: 24 * canvas.width / 1000,
     radius: 0,
     x: 0,
     y: 0,
@@ -67,64 +68,68 @@ var balle = {
     dx: DX,
     dy: DY,
     move: function(){
-        this.rx = this.x + this.radius;
-        this.ry = this.y + this.radius;
+        /* Fonction qui effectue le déplacement de la balle */
 
-        // mur droit / gauche
-        if(this.x + this.dx > canvas.width - this.size){
-            this.dx = -DX;
-        }
+        if(this.dx != 0 || this.dy != 0){
+            this.rx = this.x + this.radius;
+            this.ry = this.y + this.radius;
 
-        if(this.x + this.dx < 0){
-            this.dx = DX;
-        }
+            // mur droit / gauche
+            if(this.x + this.dx > canvas.width - this.size){
+                this.dx = -DX;
+            }
 
-        // mur du haut
-        if(this.y + this.dy < 0) {  
-            this.dy = DY;
-        }
+            if(this.x + this.dx < 0){
+                this.dx = DX;
+            }
 
-        // collision avec la raquette
-        if(this.y + this.dy + this.size > raquette.y && this.y + this.dy + this.size < raquette.y + raquette.h *1/5 &&
-            this.x + this.dx > raquette.x && this.x + this.dx < raquette.x + raquette.w) {  
-            this.dy = -DY;
-        }
-        else{
-            // collision avec les bords de la raquette
-            if(this.y + this.dy + this.size > raquette.y  && this.dy + this.size < raquette.y + raquette.h *1/2 &&
-                this.x + this.dx + this.size > raquette.x && this.x + this.dx < raquette.x + raquette.w/2){  
-                    // bord gauche
-                    this.dy = -DY;
-                    this.dx = -DX;
+            // mur du haut
+            if(this.y + this.dy < 0) {  
+                this.dy = DY;
+            }
+
+            // collision avec la raquette
+            if(this.y + this.dy + this.size > raquette.y && this.y + this.dy + this.size < raquette.y + raquette.h *1/5 &&
+                this.x + this.dx > raquette.x && this.x + this.dx < raquette.x + raquette.w) {  
+                this.dy = -DY;
             }
             else{
+                // collision avec les bords de la raquette
                 if(this.y + this.dy + this.size > raquette.y  && this.dy + this.size < raquette.y + raquette.h *1/2 &&
-                    this.x + this.dx < raquette.x + raquette.w && this.x + this.dx > raquette.x + raquette.w/2  ){
-                        // bord droit
+                    this.x + this.dx + this.size > raquette.x && this.x + this.dx < raquette.x + raquette.w/2){  
+                        // bord gauche
                         this.dy = -DY;
-                        this.dx = DX;
+                        this.dx = -DX;
+                }
+                else{
+                    if(this.y + this.dy + this.size > raquette.y  && this.dy + this.size < raquette.y + raquette.h *1/2 &&
+                        this.x + this.dx < raquette.x + raquette.w && this.x + this.dx > raquette.x + raquette.w/2  ){
+                            // bord droit
+                            this.dy = -DY;
+                            this.dx = DX;
+                    }
                 }
             }
-        }
 
-        // mur du bas
-        if(this.y + this.dy > canvas.height - this.size){
-            // perdu
-            lives -= 1;
-            gameStarted = false;
+            // mur du bas
+            if(this.y + this.dy > canvas.height - this.size){
+                // perdu
+                lives -= 1;
+                gameStarted = false;
 
-            resetPosition();
+                resetPosition();
 
-            if(lives == 0){
-                gameOverBool = true;
-                clearInterval(drawInterval);
-                gameOverInterval = setInterval(gameOver, delay);
-                drawPlayAgainInterval = setInterval(drawPlayAgain, delay*500);
+                if(lives == 0){
+                    gameOverBool = true;
+                    clearInterval(drawInterval);
+                    gameOverInterval = setInterval(gameOver, delay);
+                    drawPlayAgainInterval = setInterval(drawPlayAgain, delay*500);
+                }
             }
+            
+            this.x += this.dx;
+            this.y += this.dy;
         }
-        
-        this.x += this.dx;
-        this.y += this.dy;
     }
 } 
 
@@ -160,15 +165,19 @@ var background = document.getElementById("background");
 
 
 function draw() {
+    /* Fonction d'affichage principale */
+
     ctx.clearRect(0,0,canvas.width,canvas.height); //; Effacer le canvas
     ctx.drawImage(background, 0, 0, canvas.width, canvas.height); // Background
 
     ctx.fillStyle = "white";
-    ctx.font = "italic 32px Segoe";
+    fontsize = 32 * canvas.width / 1000;
+    ctx.font = "italic "+fontsize+"px Segoe";
     ctx.fillText('Lives : ' + lives, canvas.width*1/5, canvas.height * 1/15); // Afficher le nb de vies restantes
     ctx.fillText('Score : ' + score, canvas.width*4/5, canvas.height * 1/15); // Afficher le score
     ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-    ctx.font = "italic 16px Segoe";
+    fontsize = 16 * canvas.width / 1000;
+    ctx.font = "italic "+fontsize+"px Segoe";
     ctx.fillText('High Score : ' + highscore, canvas.width*4/5, canvas.height * 1/10); // Afficher le score
 
     
@@ -183,6 +192,7 @@ function draw() {
 
 
 function initializeBricks(level){
+    /* Fonction qui initialise les briques du jeu selon le niveau */
 
     var map = [[0,0,0,0,0], 
                [0,0,1,0,0], 
@@ -230,6 +240,7 @@ function initializeBricks(level){
 }
 
 function drawBricks(){
+    /* Fonction qui affiche les briques du jeu */
     for(var i=0; i<bricks.length; i++){
         var brick = bricks[i];
         if(brick.hit)
@@ -240,33 +251,41 @@ function drawBricks(){
 }
 
 function gameOver(){
+    /* Fonction qui affiche l'écran de la fin du jeu */
+
     var go_img = document.getElementById("gameover");
     ctx.clearRect(0,0,canvas.width,canvas.height); //; Effacer le canvas
     ctx.drawImage(go_img, 0, 0, canvas.width, canvas.height);
 
     ctx.fillStyle = "white";
-    ctx.font = "italic 16px Lucida Sans";
+    fontsize = 16 * canvas.width / 1000;
+    ctx.font = "italic "+ fontsize + "px Lucida Sans";
     if(score>highscore){
         ctx.fillText('New High Score : ' + score + " !", canvas.width/2, canvas.height * 2/3); 
     }else{
         ctx.fillText('Score : ' + score, canvas.width/2, canvas.height * 2/3); 
         ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-        ctx.font = "italic 12px Lucida Sans";
+        fontsize = 12 * canvas.width / 1000;
+        ctx.font = "italic "+fontsize+"px Lucida Sans";
         ctx.fillText('High Score : ' + highscore, canvas.width/2, canvas.height * 2/3 + 25); 
     }
 
     if(showPlayAgain){
         ctx.fillStyle = "rgba(200, 200, 200, 0.6)";
-        ctx.font = "italic 16px Lucida Sans";
+        fontsize = 16 * canvas.width / 1000;
+        ctx.font = "italic "+fontsize+"px Lucida Sans";
         ctx.fillText("Press Enter to play again.", canvas.width/2, canvas.height * 4/5); 
     }
 }
 
 function drawPlayAgain(){
+    /* Fonction qui aide à effectuer l'animation de l'écran Game Over */
     showPlayAgain = !showPlayAgain;
 }
 
 function playAgain(){
+    /* Fonction qui relance le jeu après une fin de partie */
+
     gameOverBool = false;
     lives = 3;
     score = 0;
@@ -280,13 +299,15 @@ function playAgain(){
 }
 
 function resetPosition(){
+    /* Fonction qui remet les objets du jeu à la position de départ */
+
     gameStarted = false;
+    balle.dx = 0;
+    balle.dy = 0;
     raquette.x = canvas.width/2 - raquette.w/2;
     raquette.y = Math.floor(canvas.height - 1.5*raquette.h);
     balle.x = raquette.x + raquette.w/2 - balle.size/2;
     balle.y = raquette.y - balle.size;
-    balle.dx = 0;
-    balle.dy = 0;
 }
 
 
@@ -296,9 +317,12 @@ function resetPosition(){
 //    COLLISIONS FUNCTIONS   ############################################################""
 
 function checkBricksCollision(){
+    /* Fonction qui contrôle les collisions sur les briques */
 
     for(var i=0; i<bricks.length; i++){
         var brick = bricks[i];
+        if(!gameStarted)
+            brick.hitControl = true;
         if(checkCollision(balle, brick)){
             collisionBrickBalle(brick, balle);
         }
@@ -309,27 +333,33 @@ function checkBricksCollision(){
 }
 
 function checkCollision(balle, brick){
+    /* Fonction qui détecte s'il y a une collision entre la balle et une brique */
+
     var x = clamp(brick.x, brick.x + brick.w, balle.rx);
     var y = clamp(brick.y, brick.y + brick.h, balle.ry);
     var dx = balle.rx - x;
     var dy = balle.ry - y;
     var d = Math.sqrt(dx * dx + dy * dy);
-    return(d <= balle.radius);
+    return(d < balle.radius);
 }
 
 function collisionBrickBalle(brick, balle){
-    var x = clamp(brick.x, brick.x + brick.w, balle.rx);
-    var y = clamp(brick.y, brick.y + brick.h, balle.ry);
+    /* Fonction qui traite les collisions entre la balle et une brique */
 
-    if(x == brick.x)
-        balle.dx = -DX;
-    else if(x == brick.x + brick.w)
-            balle.dx = DX;
+    if(gameStarted){
+        var x = clamp(brick.x, brick.x + brick.w, balle.rx);
+        var y = clamp(brick.y, brick.y + brick.h, balle.ry);
 
-    if(y == brick.y)
-        balle.dy = -DY;
-    else if(y == brick.y + brick.h)
-            balle.dy = DY;
+        if(x == brick.x)
+            balle.dx = -DX;
+        else if(x == brick.x + brick.w)
+                balle.dx = DX;
+
+        if(y == brick.y)
+            balle.dy = -DY;
+        else if(y == brick.y + brick.h)
+                balle.dy = DY;
+    }
 
     if(brick.hit && !brick.hitControl){
         score += 100;
@@ -338,19 +368,24 @@ function collisionBrickBalle(brick, balle){
             bricks.splice(index, 1);
         }
         if(bricks.length == 0){
+            score += 500;
             level ++;
             resetPosition();
             initializeBricks(level);
         }
     }else{
-        if(!brick.hitControl)
+        if(!brick.hitControl && gameStarted){
             score += 50;   // first hit
-        brick.hit = true;
-        brick.hitControl = true;
+            brick.hit = true;
+            brick.hitControl = true;
+        }
     }
 }
 
 function clamp(min, max, value){
+    /* Fonction Clamp qui permet de calculer le point d'un rectangle le plus proche d'un cercle, 
+        utile pour détecter les collisions balle-brique */
+
     if(value < min){
         return min;
     }else if(value > max){
@@ -367,20 +402,23 @@ function clamp(min, max, value){
 //   EVENT LISTENERS        ##############################
 
 addEventListener("keydown", function(e) {
+    /* Ecouteur d'événements des touches du clavier */
             switch(e.keyCode) {
                     case 37: // go left
                         if(raquette.x - raquette.speed >= 0){
                             raquette.x -= raquette.speed;
-                            if(!gameStarted)
+                            if(!gameStarted){
                                 balle.x = raquette.x + raquette.w/2 - balle.size/2; 
+                            }
                         }
                         break;
 
                     case 39: // go right
                         if(raquette.x + raquette.w + raquette.speed <= canvas.width){
                             raquette.x += raquette.speed;
-                            if(!gameStarted)
-                                balle.x = raquette.x + raquette.w/2 - balle.size/2; 
+                            if(!gameStarted){
+                                balle.x = raquette.x + raquette.w/2 - balle.size/2;
+                            } 
                         }
                         break;
                     
