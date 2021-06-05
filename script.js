@@ -46,7 +46,9 @@ raquette.y = Math.floor(canvas.height - 1.5*raquette.h);
 
 var raquetteImage = raquette.getImage();
 setInterval(updateRaquetteImage, 100)
+
 function updateRaquetteImage(){
+    /* Fonction qui permet de faire l'animation de la raquette */
     raquetteImage = raquette.getImage()
 }
 
